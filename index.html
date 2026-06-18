@@ -122,6 +122,7 @@
             <div class="info-item">
                 <p><strong>服务器联机地址：</strong>Wlr.xubi.org</p>
                 <p><strong>互通特性：</strong>服务器Java基岩互通</p>
+                <p><strong>基岩版提示：</strong>如果你是基岩版玩家，请将端口改为 16725</p>
                 <p><strong>核心版本：</strong>1.21.8</p>
                 <p><strong>支持客户端：</strong>1.7及以上所有版本均可加入</p>
                 <p><strong>服务器类型：</strong>纯净生存服，无模组无插件破坏平衡</p>
@@ -147,23 +148,19 @@
     </div>
 
 <script>
-// 已删除banner刷新相关代码
 const serverHost = "play.simpfun.cn:16725";
 const statusDot = document.getElementById("statusDot");
 const statusText = document.getElementById("statusText");
 const playerCount = document.getElementById("playerCount");
 
-// 查询服务器状态，4秒超时，失败重试一次
 async function getServerStatus() {
     let data = null;
     const timeout = { signal: AbortSignal.timeout(4000) };
     try {
-        // 第一次请求
         const res = await fetch(`https://api.mcsrvstat.us/3/${serverHost}`, timeout);
         data = await res.json();
     } catch (err)
         try {
-            // 失败重试一次
             const res2 = await fetch(`https://api.mcsrvstat.us/3/${serverHost}`, timeout);
             data = await res2.json();
         } catch (e) {
@@ -185,7 +182,6 @@ async function getServerStatus() {
     }
 }
 
-// 页面加载立刻执行，每30秒刷新一次在线数据
 getServerStatus();
 setInterval(getServerStatus, 30000);
 </script>
