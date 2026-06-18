@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的世界纯净生存服务器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+        body {
+            background: linear-gradient(145deg, #0f1724, #1a273d);
+            min-height: 100vh;
+            color: #e8edf5;
+            padding: 40px 15px;
+        }
+        .wrap {
+            max-width: 920px;
+            margin: 0 auto;
+        }
+        .page-title {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .page-title h1 {
+            font-size: 40px;
+            background: linear-gradient(90deg, #50b7ff, #00e4ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 10px;
+        }
+        .page-title p {
+            color: #96a9c2;
+            font-size: 17px;
+        }
+        .card {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 22px;
+            transition: 0.3s all ease;
+        }
+        .card:hover {
+            transform: translateY(-6px);
+            border-color: rgba(80, 183, 255, 0.35);
+            box-shadow: 0 12px 45px rgba(0, 150, 255, 0.15);
+        }
+        .card h2 {
+            font-size: 22px;
+            margin-bottom: 20px;
+            color: #fff;
+            border-left: 4px solid #00ccff;
+            padding-left: 12px;
+        }
+        .server-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 18px;
+            margin-bottom: 16px;
+        }
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: breathe 2s infinite ease-in-out;
+        }
+        .online-dot {
+            background-color: #28d960;
+        }
+        .offline-dot {
+            background-color: #ff4757;
+        }
+        @keyframes breathe {
+            0%, 100% {opacity: 0.5; transform: scale(0.9);}
+            50% {opacity: 1; transform: scale(1.2);}
+        }
+        .info-item {
+            font-size: 17px;
+            line-height: 2.3;
+            color: #d0dceb;
+        }
+        .info-item strong {
+            color: #64d1ff;
+        }
+        .qq-group {
+            text-align: center;
+        }
+        .qq-group h2 {
+            border: none;
+            padding: 0;
+        }
+        .group-num {
+            font-size: 26px;
+            color: #00ccff;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .loading-text {
+            color: #aaa;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <div class="page-title">
+            <h1>我的世界纯净生存服务器</h1>
+            <p>长期稳定生存服 | 1.7+全版本互通</p>
+        </div>
+
+        <div class="card">
+            <h2>服务器详情</h2>
+            <div class="server-status">
+                <span id="statusDot" class="status-dot online-dot"></span>
+                <span id="statusText">服务器状态：加载中...</span>
+            </div>
+            <div class="info-item">
+                <p><strong>服务器联机地址：</strong>Wlr.xubi.org</p>
+                <p><strong>互通特性：</strong>服务器Java基岩互通</p>
+                <p><strong>核心版本：</strong>1.21.8</p>
+                <p><strong>支持客户端：</strong>1.7及以上所有版本均可加入</p>
+                <p><strong>服务器类型：</strong>纯净生存服，无模组无插件破坏平衡</p>
+                <p><strong>实时在线人数：</strong><span id="playerCount" class="loading-text">获取中</span></p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>服务器规则</h2>
+            <div class="info-item">
+                <p>1、严禁使用任何外挂、作弊MOD、透视材质包等违规工具</p>
+                <p>2、禁止恶意破坏他人建筑、偷取玩家物资</p>
+                <p>3、禁止辱骂、引战、刷屏等不文明行为</p>
+                <p>4、违规将会视情节给予警告、封禁处罚</p>
+            </div>
+        </div>
+
+        <div class="card qq-group">
+            <h2>加入玩家交流群</h2>
+            <p class="info-item">进群获取服务器地址、解决游戏问题、认识同服玩家</p>
+            <div class="group-num">QQ群：454258470</div>
+        </div>
+    </div>
+
+<script>
+// 已删除banner刷新相关代码
+const serverHost = "play.simpfun.cn:16725";
+const statusDot = document.getElementById("statusDot");
+const statusText = document.getElementById("statusText");
+const playerCount = document.getElementById("playerCount");
+
+// 查询服务器状态，4秒超时，失败重试一次
+async function getServerStatus() {
+    let data = null;
+    const timeout = { signal: AbortSignal.timeout(4000) };
+    try {
+        // 第一次请求
+        const res = await fetch(`https://api.mcsrvstat.us/3/${serverHost}`, timeout);
+        data = await res.json();
+    } catch (err)
+        try {
+            // 失败重试一次
+            const res2 = await fetch(`https://api.mcsrvstat.us/3/${serverHost}`, timeout);
+            data = await res2.json();
+        } catch (e) {
+            statusDot.className = "status-dot offline-dot";
+            statusText.innerText = "服务器状态：API访问超时";
+            playerCount.innerText = "无法读取在线人数";
+            return;
+        }
+    }
+
+    if (data.online) {
+        statusDot.className = "status-dot online-dot";
+        statusText.innerText = "服务器当前状态：正常开放";
+        playerCount.innerText = `${data.players.online} / ${data.players.max} 人`;
+    } else {
+        statusDot.className = "status-dot offline-dot";
+        statusText.innerText = "服务器当前状态：离线维护中";
+        playerCount.innerText = "0 / 0 人";
+    }
+}
+
+// 页面加载立刻执行，每30秒刷新一次在线数据
+getServerStatus();
+setInterval(getServerStatus, 30000);
+</script>
+</body>
+</html>
