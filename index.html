@@ -153,39 +153,37 @@ const statusDot = document.getElementById("statusDot");
 const statusText = document.getElementById("statusText");
 const playerCount = document.getElementById("playerCount");
 
-// 统一请求头，解决API 403禁止访问
-const fetchOptions = {
+// 添加UA头，解决api.mcsrvstat.us 403拦截
+const fetchConfig = {
     signal: AbortSignal.timeout(4000),
     headers: {
-        "User-Agent": "MC-Server-Status-Page/1.0 (Minecraft 互通服网页查询)"
+        "User-Agent": "MC-Server-StatusWeb/1.0 (Minecraft Java&Bedrock Proxy)"
     }
 };
 
 async function getServerStatus() {
-    let data = null;
+    let resData = null;
     try {
-        const res = await fetch(`https://api.mcsrvstat.us/3/${serverHost}`, fetchOptions);
-        if (!res.ok) throw new Error(`HTTP错误：${res.status}`);
-        data = await res.json();
+        const response = await fetch(`https://api.mcsrvstat.us/3/${serverHost}`, fetchConfig);
+        if (!response.ok) throw new Error("接口返回异常");
+        resData = await response.json();
     } catch (err) {
-        console.log("首次请求失败：", err);
         try {
-            const res2 = await fetch(`https://api.mcsrvstat.us/3/${serverHost}`, fetchOptions);
-            if (!res2.ok) throw new Error(`HTTP错误：${res2.status}`);
-            data = await res2.json();
-        } catch (e) {
-            console.log("重试请求失败：", e);
+            const response2 = await fetch(`https://api.mcsrvstat.us/3/${serverHost}`, fetchConfig);
+            if (!response2.ok) throw new Error("重试失败");
+            resData = await response2.json();
+        } catch () {
             statusDot.className = "status-dot offline-dot";
-            statusText.innerText = "获取失败：API拦截/服务器端口屏蔽";
+            statusText.innerText = "服务器状态：接口访问失败";
             playerCount.innerText = "无法读取在线人数";
             return;
         }
     }
 
-    if (data.online) {
+    if (resData.online) {
         statusDot.className = "status-dot online-dot";
         statusText.innerText = "服务器当前状态：正常开放";
-        playerCount.innerText = `${data.players.online} / ${data.players.max} 人`;
+        playerCount.innerText = `${resData.players.online} / ${resData.players.max} 人`;
     } else {
         statusDot.className = "status-dot offline-dot";
         statusText.innerText = "服务器当前状态：离线维护中";
@@ -193,6 +191,7 @@ async function getServerStatus() {
     }
 }
 
+// 页面加载立刻查询，每30秒自动刷新状态
 getServerStatus();
 setInterval(getServerStatus, 30000);
 </script>
