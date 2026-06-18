@@ -153,19 +153,30 @@ const statusDot = document.getElementById("statusDot");
 const statusText = document.getElementById("statusText");
 const playerCount = document.getElementById("playerCount");
 
+// 统一请求头，解决API 403禁止访问
+const fetchOptions = {
+    signal: AbortSignal.timeout(4000),
+    headers: {
+        "User-Agent": "MC-Server-Status-Page/1.0 (Minecraft 互通服网页查询)"
+    }
+};
+
 async function getServerStatus() {
     let data = null;
-    const timeout = { signal: AbortSignal.timeout(4000) };
     try {
-        const res = await fetch(`https://api.mcsrvstat.us/3/${serverHost}`, timeout);
+        const res = await fetch(`https://api.mcsrvstat.us/3/${serverHost}`, fetchOptions);
+        if (!res.ok) throw new Error(`HTTP错误：${res.status}`);
         data = await res.json();
-    } catch (err)
+    } catch (err) {
+        console.log("首次请求失败：", err);
         try {
-            const res2 = await fetch(`https://api.mcsrvstat.us/3/${serverHost}`, timeout);
+            const res2 = await fetch(`https://api.mcsrvstat.us/3/${serverHost}`, fetchOptions);
+            if (!res2.ok) throw new Error(`HTTP错误：${res2.status}`);
             data = await res2.json();
         } catch (e) {
+            console.log("重试请求失败：", e);
             statusDot.className = "status-dot offline-dot";
-            statusText.innerText = "服务器状态：API访问超时";
+            statusText.innerText = "获取失败：API拦截/服务器端口屏蔽";
             playerCount.innerText = "无法读取在线人数";
             return;
         }
